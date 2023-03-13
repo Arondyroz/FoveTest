@@ -71,7 +71,8 @@ namespace FoveProgrammingTest
 
         Dictionary<GameId, Game> gameList = new Dictionary<GameId, Game>();
         int game_IDS = 0;
-        PlayerId[] newPlayerID = new PlayerId[2];
+        int player_ID = 0;
+        PlayerId[] newPlayerID = new PlayerId[2] { (PlayerId)(-1), (PlayerId)(-1) };
 
         // Creates a new game. Multiple games may be running simultaneously.
         //
@@ -101,34 +102,38 @@ namespace FoveProgrammingTest
 
         public PlayerId AddPlayer(GameId gameId)
         {
+            player_ID++;
             // Check if the game exists
             if (gameId < 0 || gameId > (GameId)game_IDS)
             {
                 return (PlayerId)GAME_DOESNT_EXIST;
             }
-            //Add Player in Array
-            if (gameList[gameId].gameState == GAME_ENDED)
-            {
-                return (PlayerId)GAME_ENDED;
-            }
-
-            Random randomPlayerId = new Random();
-            PlayerId newPlayerID = (PlayerId)randomPlayerId.Next(1, 2);
-            if (gameList[gameId].playerIDs[0] == 0)
-            {
-                gameList[gameId].playerIDs[0] = newPlayerID;
-            }
-            else
-            {
-                gameList[gameId].playerIDs[1] = newPlayerID;
-            }
-                //Return game ongoing
-                if (gameList[gameId].playerIDs.Length == 2)
+            
+            if (gameList[gameId].gameState == GAME_ONGOING)
             {
                 return (PlayerId)GAME_ONGOING;
             }
+            
+            
+            //Random randomPlayerId = new Random();
+            //PlayerId newPlayerID = (PlayerId)randomPlayerId.Next(1, 2);
+            
+            if (gameList[gameId].playerIDs[0] == (PlayerId)(-1))
+            {
+                gameList[gameId].playerIDs[0] = (PlayerId)player_ID;
+                gameList[gameId].gameState = GAME_NOT_STARTED;
+            }
+            else if (gameList[gameId].playerIDs[1] == (PlayerId)(-1))
+            {
+                gameList[gameId].playerIDs[1] = (PlayerId)player_ID;
+                gameList[gameId].gameState = GAME_ONGOING;
+            }
+            else
+            {
+                return (PlayerId)INVALID_LOCATION;
+            }
 
-            return (PlayerId)newPlayerID;
+            return (PlayerId)player_ID;
 
             // IMPLEMENT ME!
             //return (PlayerId)GAME_DOESNT_EXIST;
@@ -162,6 +167,7 @@ namespace FoveProgrammingTest
             {
                 return (PlayerId)GAME_NOT_STARTED;
             }
+            
             if (gameList[gameId].gameState == GAME_ENDED)
             {
                 return (PlayerId)GAME_ENDED;
