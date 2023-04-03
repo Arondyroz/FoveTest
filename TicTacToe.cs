@@ -1,37 +1,3 @@
-/*********************************
- * Fove C# Programming Test ------
- *********************************
-
- This test simulates a Tic Tac Toe (noughts and crosses) game server.
-
- The goal is to implement the following functions (each one documented further down):
-   CreateGame()
-   AddPlayer()
-   MakeMove()
-
- Already-implemented tests call these functions and check that they work.
- Initially, all the tests fail. Your goal is to make them all pass.
- The tests check both valid and invalid inputs, ensuring that error handling is correct.
-
- Take as much time as you need (within reason), but in general this is expected to take about an hour.
-
- The rules of tic tac toe are:
-   - Two players take turns. Each turn someone takes a spot on a 3x3 grid.
-   - The first player to take 3 collinear adjacent spots (vertically, horizontally, or diagonally) wins.
-   - The game can end in a draw if all 9 spots are taken and no one wins.
-
- Notes:
-   - Use any C# language features that you like.
-   - Use only the standard library. Don't add any other third party dependencies.
-   - You will not be judged on the code style. Use any style that works for you.
-   - Do not worry about threading, assume single threaded.
-   - Design your implementation cleanly, as if someone else were to maintain this code after you implement it.
-   - Comments are encouraged where useful, but generally things should be simple enough to not warrant many.
-
- How to build:
-   This is distributed as a single file, so please create a project using you IDE of choice.
-*/
-
 using System;
 using System.Collections.Generic;
 
@@ -102,26 +68,25 @@ namespace FoveProgrammingTest
 
         public PlayerId AddPlayer(GameId gameId)
         {
-            player_ID++;
+
             // Check if the game exists
             if (gameId < 0 || gameId > (GameId)game_IDS)
             {
                 return (PlayerId)GAME_DOESNT_EXIST;
             }
-            
+
+
             if (gameList[gameId].gameState == GAME_ONGOING)
             {
                 return (PlayerId)GAME_ONGOING;
             }
-            
-            
-            //Random randomPlayerId = new Random();
-            //PlayerId newPlayerID = (PlayerId)randomPlayerId.Next(1, 2);
-            
+
+
+            player_ID++;
+            //Add Players
             if (gameList[gameId].playerIDs[0] == (PlayerId)(-1))
             {
                 gameList[gameId].playerIDs[0] = (PlayerId)player_ID;
-                gameList[gameId].gameState = GAME_NOT_STARTED;
             }
             else if (gameList[gameId].playerIDs[1] == (PlayerId)(-1))
             {
@@ -130,14 +95,14 @@ namespace FoveProgrammingTest
             }
             else
             {
-                return (PlayerId)INVALID_LOCATION;
+                gameList[gameId].gameState = GAME_ONGOING;
+                //return (PlayerId)INVALID_LOCATION;
             }
+
 
             return (PlayerId)player_ID;
 
-            // IMPLEMENT ME!
-            //return (PlayerId)GAME_DOESNT_EXIST;
-        }   
+        }
 
         // Allows a player to make a move
         //
@@ -167,31 +132,33 @@ namespace FoveProgrammingTest
             {
                 return (PlayerId)GAME_NOT_STARTED;
             }
-            
+
+
             if (gameList[gameId].gameState == GAME_ENDED)
             {
                 return (PlayerId)GAME_ENDED;
             }
 
-            //if (playerId < 0 || playerId > 1)
-            //{
-            //    return (PlayerId)PLAYER_DOESNT_EXIST;
-            //}
-
-            if (playerId != gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2])
-            {
-                return (PlayerId)WRONG_TURN;
-            }
 
             if (boardX < 0 || boardX > 2 || boardY < 0 || boardY > 2 || gameList[gameId].moveList.Contains(Tuple.Create(boardX, boardY)))
             {
                 return (PlayerId)INVALID_LOCATION;
             }
 
-            gameList[gameId].moveList.Add(Tuple.Create(boardX, boardY));
+
+            if (playerId != gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2])
+            {
+                return (PlayerId)WRONG_TURN;
+            }
+
+            if (gameList[gameId].gameState != GAME_ENDED)
+            {
+                gameList[gameId].moveList.Add(Tuple.Create(boardX, boardY));
+            }
+
 
             //check winner
-            if (gameList[gameId].moveList.Count >= 5)
+            if (gameList[gameId].moveList.Count >= 5 && gameList[gameId].moveList.Count == 9)
             {
                 //check rows
                 for (int i = 0; i < 3; i++)
@@ -200,6 +167,7 @@ namespace FoveProgrammingTest
                         gameList[gameId].moveList.Contains(Tuple.Create(i, 1)) &&
                         gameList[gameId].moveList.Contains(Tuple.Create(i, 2)))
                     {
+                        gameList[gameId].gameState = GAME_ENDED;
                         return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
                     }
                 }
@@ -210,6 +178,7 @@ namespace FoveProgrammingTest
                         gameList[gameId].moveList.Contains(Tuple.Create(1, i)) &&
                         gameList[gameId].moveList.Contains(Tuple.Create(2, i)))
                     {
+                        gameList[gameId].gameState = GAME_ENDED;
                         return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
                     }
                 }
@@ -218,12 +187,14 @@ namespace FoveProgrammingTest
                     gameList[gameId].moveList.Contains(Tuple.Create(1, 1)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(2, 2)))
                 {
+                    gameList[gameId].gameState = GAME_ENDED;
                     return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
                 }
                 if (gameList[gameId].moveList.Contains(Tuple.Create(0, 2)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(1, 1)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(2, 0)))
                 {
+                    gameList[gameId].gameState = GAME_ENDED;
                     return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
                 }
             }
@@ -231,12 +202,13 @@ namespace FoveProgrammingTest
             // check if game has ended in a draw
             if (gameList[gameId].moveList.Count == 9)
             {
+                gameList[gameId].gameState = GAME_ENDED;
                 return gameList[gameId].playerIDs[1];
             }
 
             return (PlayerId)GAME_ONGOING;
         }
-    }   
+    }
 
     //////////////////////////////////////////////////////
     // Nothing below this point needs to be changed ------
@@ -275,7 +247,7 @@ namespace FoveProgrammingTest
             testGames[gameId] = new GameInfo();
             return gameId;
         }
-         
+
         GameId InvalidGameId() // Returns an unused game id
         {
             for (GameId i = (GameId)200; ; ++i)
