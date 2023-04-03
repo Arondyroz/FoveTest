@@ -38,7 +38,7 @@ namespace FoveProgrammingTest
         Dictionary<GameId, Game> gameList = new Dictionary<GameId, Game>();
         int game_IDS = 0;
         int player_ID = 0;
-        PlayerId[] newPlayerID = new PlayerId[2] { (PlayerId)(-1), (PlayerId)(-1) };
+        PlayerId[] newPlayerID;
 
         // Creates a new game. Multiple games may be running simultaneously.
         //
@@ -50,9 +50,10 @@ namespace FoveProgrammingTest
         {
             //Create Game
             game_IDS++;
-            gameList.Add((GameId)game_IDS, new Game(GAME_NOT_STARTED, newPlayerID, new List<Tuple<int, int>>()));
+            gameList.Add((GameId)game_IDS, new Game(GAME_NOT_STARTED, new PlayerId[2] { (PlayerId)(-1), (PlayerId)(-1) }, new List<Tuple<int, int>>()));
             //Create Player
             return (GameId)game_IDS;
+
         }
 
         // Adds a player to a game that has been created, but not started.
@@ -68,11 +69,15 @@ namespace FoveProgrammingTest
 
         public PlayerId AddPlayer(GameId gameId)
         {
-
             // Check if the game exists
             if (gameId < 0 || gameId > (GameId)game_IDS)
             {
                 return (PlayerId)GAME_DOESNT_EXIST;
+            }
+
+            if (gameList[gameId].gameState == GAME_ENDED)
+            {
+                return (PlayerId)GAME_ENDED;
             }
 
 
@@ -98,7 +103,6 @@ namespace FoveProgrammingTest
                 gameList[gameId].gameState = GAME_ONGOING;
                 //return (PlayerId)INVALID_LOCATION;
             }
-
 
             return (PlayerId)player_ID;
 
@@ -133,7 +137,6 @@ namespace FoveProgrammingTest
                 return (PlayerId)GAME_NOT_STARTED;
             }
 
-
             if (gameList[gameId].gameState == GAME_ENDED)
             {
                 return (PlayerId)GAME_ENDED;
@@ -145,7 +148,6 @@ namespace FoveProgrammingTest
                 return (PlayerId)INVALID_LOCATION;
             }
 
-
             if (playerId != gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2])
             {
                 return (PlayerId)WRONG_TURN;
@@ -154,11 +156,18 @@ namespace FoveProgrammingTest
             if (gameList[gameId].gameState != GAME_ENDED)
             {
                 gameList[gameId].moveList.Add(Tuple.Create(boardX, boardY));
+
+                //Console.WriteLine("Game: {0} {1} {2} {3}", gameId, gameList[gameId].playerIDs[0], gameList[gameId].playerIDs[1], gameList[gameId].moveList.Count);
+                //foreach (var tuple in gameList[gameId].moveList)
+                //{
+                //Console.WriteLine("{0} - {1} - {2}", tuple.Item1, tuple.Item2, 1 - gameList[gameId].moveList.Count % 2);
+                //}
             }
 
 
+
             //check winner
-            if (gameList[gameId].moveList.Count >= 5 && gameList[gameId].moveList.Count == 9)
+            if (gameList[gameId].moveList.Count >= 5)
             {
                 //check rows
                 for (int i = 0; i < 3; i++)
@@ -167,9 +176,11 @@ namespace FoveProgrammingTest
                         gameList[gameId].moveList.Contains(Tuple.Create(i, 1)) &&
                         gameList[gameId].moveList.Contains(Tuple.Create(i, 2)))
                     {
+
                         gameList[gameId].gameState = GAME_ENDED;
-                        return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
+                        return gameList[gameId].playerIDs[1 - gameList[gameId].moveList.Count % 2];
                     }
+
                 }
                 //check columns
                 for (int i = 0; i < 3; i++)
@@ -179,31 +190,36 @@ namespace FoveProgrammingTest
                         gameList[gameId].moveList.Contains(Tuple.Create(2, i)))
                     {
                         gameList[gameId].gameState = GAME_ENDED;
-                        return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
+                        return gameList[gameId].playerIDs[1 - gameList[gameId].moveList.Count % 2];
                     }
+
                 }
                 //check diagonals
                 if (gameList[gameId].moveList.Contains(Tuple.Create(0, 0)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(1, 1)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(2, 2)))
                 {
+
                     gameList[gameId].gameState = GAME_ENDED;
-                    return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
+                    return gameList[gameId].playerIDs[1 - gameList[gameId].moveList.Count % 2];
                 }
+
                 if (gameList[gameId].moveList.Contains(Tuple.Create(0, 2)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(1, 1)) &&
                     gameList[gameId].moveList.Contains(Tuple.Create(2, 0)))
                 {
                     gameList[gameId].gameState = GAME_ENDED;
+                    return gameList[gameId].playerIDs[1 - gameList[gameId].moveList.Count % 2];
+                }
+
+
+                // check if game has ended in a draw
+                if (gameList[gameId].moveList.Count == 9)
+                {
+                    gameList[gameId].gameState = GAME_ENDED;
                     return gameList[gameId].playerIDs[gameList[gameId].moveList.Count % 2];
                 }
-            }
 
-            // check if game has ended in a draw
-            if (gameList[gameId].moveList.Count == 9)
-            {
-                gameList[gameId].gameState = GAME_ENDED;
-                return gameList[gameId].playerIDs[1];
             }
 
             return (PlayerId)GAME_ONGOING;
